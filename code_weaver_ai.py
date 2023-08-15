@@ -80,16 +80,46 @@ def generate():
     for i, chunk in enumerate(response):
         print(chunk['choices'][0]['delta']['content'], end='')
 
+# def run_program():
+    # command = 'docker compose up --build'
+    # result = subprocess.run(command, shell=True)
+    # return result.returncode
+
+
+# def run_program():
+    # command = 'docker compose up --build'
+    # subprocess.run(command, shell=True)
+
+    # # Get the exit code of the service after it has stopped
+    # exit_command = 'docker compose ps --services --filter "status=exited" | xargs docker compose ps -q | xargs docker inspect -f "{{.State.ExitCode}}"'
+    # exit_code = subprocess.check_output(exit_command, shell=True).decode().strip()
+
+    # return int(exit_code)
+
+
+
 def run_program():
     command = 'docker compose up --build'
-    result = subprocess.run(command, shell=True)
-    return result.returncode
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
+    stdout = result.stdout
+    stderr = result.stderr
+
+    # Extracting the exit code from the output
+    # Assuming the format is always "exited with code X", where X is the exit code
+    exit_code_line = [line for line in (stdout + '\n' + stderr).split('\n') if "exited with code" in line]
+    if exit_code_line:
+        exit_code = int(exit_code_line[0].split()[-1])
+    else:
+        exit_code = result.returncode
+
+    return exit_code, stdout, stderr
 
 
 
 if __name__ == "__main__":
     # generate()
-    exit_code = run_program()
+    # exit_code = run_program()
+    exit_code, stdout, stderr = run_program()
     print(f"Exit code: {exit_code}")
 
